@@ -36,24 +36,24 @@ module controller_PmodALS(
 		counter =0;
 		end
 	
-		always  @(negedge sw or posedge scl or negedge cs)
+		always  @( posedge scl or negedge cs)
 			begin
 			if(!cs) 
 				begin 
-				if(sw)
-					begin
 					cycle[counter] =sdo;
 					counter = counter +1'd1;
 					if (!counter) led = cycle;
-					end
-				else
-				if(!led) led =0;
-				else led =16'hFFFF;
 				end
 			else
 			led = 0;
 			end
-	
+	  always @(negedge sw)
+	  begin
+	  if (!led) led =16'hFFFF;
+	  else led = 0;	
+	  
+	  end
+	  
 		assign ecs = cs;
 		assign out = led;
 endmodule
