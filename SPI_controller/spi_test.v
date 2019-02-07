@@ -26,40 +26,43 @@ module spi_test;
 
 	// Inputs
 	reg sw;
-	reg scl;
+	reg clk;
 	reg sdo;
-	reg cs;
-
+    reg rst;
 	// Outputs
-	wire ecs;
+	wire scl;
+	wire cs;
 	wire [15:0] out;
-
+ 
 	// Instantiate the Unit Under Test (UUT)
-	controller_PmodALS uut (
+controller_PmodALS uut (
 		.sw(sw), 
-		.scl(scl), 
-		.sdo(sdo), 
+		.rst(rst),
+		.clk(clk),
+		.sdo(sdo),  
+		.scl(scl),
 		.cs(cs), 
-		.ecs(ecs), 
-		.out(out)
+		.out(out)	
 	);
 always begin
- #5 scl = ~scl;
+ #2 clk = ~clk;
  end
- always begin
-#7 sdo = ~sdo;
- end
+always begin
+  #5 sdo = ~sdo;
+  end
+
 	initial begin
 		// Initialize Inputs
 		sw = 1;
-		scl = 0;
+		clk = 0;
 		sdo = 1;
-		cs = 0;
-	           
+		
+	     rst = 1;      
 		// Add stimulus here
-		# 55 cs = 0;
-		# 300 sw = 0;
- 		# 100 cs = 1;
+		# 3 rst = 0;
+		
+		# 500000 sw = 0;
+ 		
 	end
       
 endmodule
