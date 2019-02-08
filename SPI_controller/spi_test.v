@@ -48,7 +48,7 @@ always begin
  #2 clk = ~clk;
  end
 always begin
-  #5 sdo = ~sdo;
+  #15 sdo = ~sdo;
   end
 
 	initial begin
