@@ -28,70 +28,85 @@ module controller_PmodALS(
    output [15:0] out
    
   );
-       reg [1:0] auto;
+       reg  state;
+       
        reg [15:0] led;
+       reg [15:0] mem;
        reg [3:0] counter;
        reg [15:0] cycle;
-        reg [6:0] delim_freq;
-        reg [11:0] delim_freq1;
-       always  @( posedge clk )
+       reg [6:0] delim_freq;
+       
+       always  @( posedge clk ) // scl generator
            begin
-               if(rst)
-                   begin
-                   led  <=0;
-                   counter <=0;
-                   cycle <=0;
-                   delim_freq <=0;
-                   scl <=1;
-                   cs <=1;
-                   auto <= 3;
-                   delim_freq1 <= 0;
-                   end
-               else
-                   begin
-                   
-                        if(auto != 3)
-                           begin 
-                                   cs = 0;     
-                                    delim_freq <= delim_freq + 1'd1;
-                                   if(delim_freq == 50)
-                                       scl <= ~scl;
-                                    
-                                   if (delim_freq == 100)
-                                       begin
-                                        delim_freq <= 0;
-                                           scl <= ~scl;
-                                           cycle[counter] <= sdo;
-                                           counter <= counter +1'd1;
-                                           
-                                           if (!counter)
-                                               begin
-                                               auto <= auto+1'd1;
-                                                if(sw)
-                                                led <= cycle;
-                                                else
-                                                    begin
-                                                    if(!cycle) led <=16'hffff;
-                                                    else led <= 0; 
-                                                    end
-                                                end    
-                                            end  
-                                           
-                                   
-                           end
-                       else 
-                           begin
-                           delim_freq1 <= delim_freq1+1'd1;
-                           scl <= 0;
-                           cs <= 1;
-                           if(delim_freq1 == 1600)
-                               begin
-                               delim_freq1 <=0;
-                               auto <= auto+1;
-                               led <= 0;
-                               end
-                           end
-                       end
-           end    
+           if(rst)
+            begin
+                scl <=0;
+                delim_freq<=0;
+            end
+            else
+                begin
+                   delim_freq <= delim_freq + 1'd1;
+                   if(delim_freq == 50)
+                       scl <= ~scl;
+                    
+                   if (delim_freq == 100)
+                       begin
+                        delim_freq <= 0;
+                        scl <= ~scl;
+                        end
+                end
+            end
+            
+       always @(posedge clk) //reading data
+       begin
+       if(rst)
+        begin
+          cs<=1;
+                counter <=0;
+                mem<=0;
+                cycle <=0;
+                state <=0;
+        end
+        else
+          begin
+               if (delim_freq==100)
+                    begin
+                        if(state == 1)
+                            begin
+                                if(counter == 15)
+                                    begin
+                                        cycle[counter] <= sdo;
+                                        counter <= counter + 1'd1;
+                                        state <= 0;
+                                        cs <= 1;
+                                    end
+                                else
+                                    begin
+                                      cycle[counter] <= sdo;
+                                      counter <= counter + 1'd1;
+                                      if (counter == 0)
+                                      mem <= cycle;
+                                    end
+                            end
+                        if(state ==0)
+                            begin
+                            cs<=0;
+                            state <=1;
+                            end
+                    end
+            end
+       end
+       always @*
+           begin
+           if(rst)
+                  led <= 0;
+            if(sw)
+          led <= mem;
+          else
+              begin
+              if(mem == 0) led <=16'hffff;
+              else led <= 0; 
+              end
+          end   
        assign out = led;
 endmodule
